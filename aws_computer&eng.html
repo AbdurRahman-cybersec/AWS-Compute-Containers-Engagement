@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AWS Compute, Containers, & Customer Engagement — Cloud Practitioner Study Guide</title>
+<style>
+:root {
+  --batch: #00F2FE;
+  --ec2: #4FACFE;
+  --beanstalk: #00FF87;
+  --lightsail: #FFB347;
+  --outposts: #F53803;
+  --wavelength: #FF007F;
+  --containers: #38BDF8;
+  --engagement: #34D399;
+  --bg: #0F0F1A;
+  --surface: #1A1A2E;
+  --surface2: #22223A;
+  --text: #E8E8F0;
+  --muted: #9595B0;
+  --accent: #00F2FE;
+  --success: #4CAF50;
+  --danger: #EF5350;
+  --border: #2A2A42;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+/* Progress Bar */
+#progress-wrap {
+  position: fixed; top: 0; left: 0; width: 100%; height: 4px;
+  background: var(--border); z-index: 1000;
+}
+#progress-bar {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, var(--batch), var(--ec2), var(--beanstalk), var(--containers), var(--engagement));
+  transition: width 0.3s;
+}
+/* Nav */
+nav {
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  padding: 14px 20px; flex-wrap: wrap; position: sticky; top: 0; z-index: 999;
+  background: rgba(15,15,26,0.92); backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+nav a {
+  color: var(--muted); text-decoration: none; font-size: 0.85rem; font-weight: 500;
+  padding: 6px 12px; border-radius: 20px; transition: all 0.2s; white-space: nowrap;
+}
+nav a:hover, nav a:focus { color: #fff; background: var(--surface2); }
+/* Container */
+.container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+section { padding: 64px 0; border-bottom: 1px solid var(--border); }
+section:last-of-type { border-bottom: none; }
+/* Hero */
+.hero {
+  text-align: center; padding: 100px 24px 80px;
+  background: radial-gradient(ellipse at 50% 20%, rgba(0,242,254,0.12) 0%, transparent 60%),
+              radial-gradient(ellipse at 80% 80%, rgba(52,211,153,0.10) 0%, transparent 50%);
+  position: relative; overflow: hidden;
+}
+.hero::before {
+  content: ''; position: absolute; inset: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.008) 2px, rgba(255,255,255,0.008) 4px);
+  pointer-events: none;
+}
+.hero h1 {
+  font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 800;
+  background: linear-gradient(135deg, var(--batch), var(--beanstalk), var(--containers));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  margin-bottom: 12px;
+}
+.hero p { font-size: 1.15rem; color: var(--muted); max-width: 600px; margin: 0 auto 32px; }
+.hero-icons { font-size: 2.5rem; display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+.hero-icons span { transition: transform 0.3s; cursor: default; }
+.hero-icons span:hover { transform: scale(1.25) rotate(5deg); }
+/* Section Headers */
+h2 {
+  font-size: 1.8rem; font-weight: 700; text-align: center; margin-bottom: 8px;
+  background: linear-gradient(135deg, var(--accent), var(--beanstalk));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+h3 { font-size: 1.25rem; font-weight: 650; margin-bottom: 12px; }
+.subtitle { text-align: center; color: var(--muted); margin-bottom: 40px; font-size: 0.95rem; }
+
+/* Diagram / Topology Matrix Panel */
+.topology-card {
+  background: var(--surface); border-radius: var(--radius); padding: 24px;
+  margin-bottom: 40px; border: 1px solid var(--border);
+}
+.topology-container {
+  width: 100%; overflow-x: auto; background: #0b0b14;
+  border-radius: 8px; padding: 20px; border: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+/* Decision Tree */
+.tree-container {
+  background: var(--surface); border-radius: var(--radius); padding: 32px;
+  border: 1px solid var(--border);
+}
+.tree-root { text-align: center; margin-bottom: 20px; }
+.tree-root .root-node {
+  display: inline-block; background: var(--surface2); color: var(--accent);
+  padding: 14px 28px; border-radius: 30px; font-weight: 700; font-size: 1rem;
+  border: 2px solid var(--accent); cursor: default;
+}
+.tree-branches { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+.tree-branch {
+  background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 14px 18px; cursor: pointer; transition: all 0.2s; flex: 0 1 200px;
+  text-align: center; font-weight: 600; font-size: 0.9rem; min-width: 180px;
+}
+.tree-branch:hover, .tree-branch:focus { transform: translateY(-3px); border-color: var(--accent); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+.tree-branch.active { border-color: var(--accent); background: rgba(0, 242, 254, 0.1); }
+.tree-answer {
+  display: none; margin-top: 24px; padding: 24px; background: var(--surface2);
+  border-radius: var(--radius-sm); border-left: 4px solid var(--accent);
+}
+.tree-answer.show { display: block; animation: fadeSlide 0.3s ease; }
+@keyframes fadeSlide { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Cards Grid */
+.card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+.card {
+  background: var(--surface); border-radius: var(--radius); padding: 24px;
+  border: 1px solid var(--border); transition: all 0.25s; position: relative; overflow: hidden;
+}
+.card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,0.4); }
+.card::before {
+  content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px;
+}
+.card.batch::before { background: var(--batch); }
+.card.ec2::before { background: var(--ec2); }
+.card.beanstalk::before { background: var(--beanstalk); }
+.card.lightsail::before { background: var(--lightsail); }
+.card.localzones::before { background: var(--accent); }
+.card.outposts::before { background: var(--outposts); }
+.card.wavelength::before { background: var(--wavelength); }
+.card.containers::before { background: var(--containers); }
+.card.engagement::before { background: var(--engagement); }
+
+.card .icon { font-size: 2rem; margin-bottom: 4px; }
+.card .card-media-box {
+  width: 100%; height: 80px; background: #131322; border-radius: 6px;
+  margin: 10px 0; border: 1px solid rgba(255, 255, 255, 0.03);
+  display: flex; align-items: center; justify-content: center;
+}
+.card .name { font-size: 1.1rem; font-weight: 700; margin-bottom: 4px; }
+.card .badge-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+.card .badge {
+  font-size: 0.72rem; padding: 3px 10px; border-radius: 12px; font-weight: 600;
+  background: rgba(255,255,255,0.08); color: var(--muted);
+}
+.card .trigger-words { font-size: 0.8rem; color: var(--accent); font-weight: 600; margin: 8px 0; }
+.card .use-this { font-size: 0.85rem; margin: 6px 0; color: var(--success); }
+.card .dont-confuse { font-size: 0.82rem; margin: 6px 0; color: var(--danger); }
+
+/* Accordion Tables */
+.concept-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+.concept-card {
+  background: var(--surface); border-radius: var(--radius); padding: 24px;
+  border: 1px solid var(--border);
+}
+.concept-card h3 { color: var(--accent); }
+.concept-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 0.88rem; }
+.concept-table th, .concept-table td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); }
+.concept-table th { color: var(--accent); font-weight: 650; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* Comparison Table */
+.comp-table-wrap { overflow-x: auto; }
+.comp-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; min-width: 700px; }
+.comp-table th {
+  background: var(--surface2); padding: 14px 12px; text-align: left; font-weight: 700;
+  color: var(--accent); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.5px;
+  position: sticky; top: 0;
+}
+.comp-table td { padding: 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.comp-table tr:hover td { background: rgba(255,255,255,0.02); }
+.comp-table .cat-chip {
+  display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 0.72rem; font-weight: 700;
+}
+.cat-compute { background: rgba(0, 242, 254, 0.2); color: var(--batch); }
+.cat-container { background: rgba(56, 189, 248, 0.2); color: var(--containers); }
+.cat-engagement { background: rgba(52, 211, 153, 0.2); color: var(--engagement); }
+
+/* Memory / Flashcard Section */
+.flashcard-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+.flashcard { perspective: 600px; height: 180px; cursor: pointer; }
+.flashcard-inner { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.5s; }
+.flashcard.flipped .flashcard-inner { transform: rotateY(180deg); }
+.flashcard-front, .flashcard-back {
+  position: absolute; inset: 0; border-radius: var(--radius-sm);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+  padding: 16px; font-weight: 700; backface-visibility: hidden;
+}
+.flashcard-front { background: var(--surface); border: 1px solid var(--border); font-size: 1rem; color: var(--text); }
+.flashcard-front span { font-size: 1.8rem; margin-bottom: 6px; }
+.flashcard-back {
+  background: linear-gradient(135deg, var(--surface2), var(--surface));
+  border: 2px solid var(--accent); transform: rotateY(180deg);
+  font-size: 0.9rem; color: var(--accent);
+}
+
+/* Scenarios */
+.scenario-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+.scenario-card {
+  background: var(--surface); border-radius: var(--radius-sm); padding: 20px;
+  border: 1px solid var(--border); transition: border-color 0.3s;
+}
+.scenario-card p { margin-bottom: 12px; font-size: 0.92rem; }
+.scenario-card select {
+  width: 100%; padding: 10px; border-radius: 8px; background: var(--surface2);
+  color: var(--text); border: 1px solid var(--border); font-size: 0.85rem; font-family: inherit;
+}
+.scenario-card .feedback { margin-top: 10px; font-size: 0.85rem; font-weight: 600; min-height: 20px; }
+.scenario-card .feedback.correct { color: var(--success); }
+.scenario-card .feedback.wrong { color: var(--danger); }
+.scenario-card.correct-border { border-color: var(--success); }
+.scenario-card.wrong-border { border-color: var(--danger); }
+
+/* Quiz */
+.quiz-container { max-width: 700px; margin: 0 auto; }
+.quiz-q { background: var(--surface); border-radius: var(--radius); padding: 24px; border: 1px solid var(--border); margin-bottom: 16px; }
+.quiz-q .q-num { color: var(--accent); font-weight: 700; font-size: 0.8rem; text-transform: uppercase; margin-bottom: 6px; }
+.quiz-q .q-text { font-weight: 600; margin-bottom: 14px; }
+.quiz-q label { display: block; padding: 10px 14px; margin: 4px 0; border-radius: 8px; cursor: pointer; transition: background 0.15s; font-size: 0.9rem; }
+.quiz-q label:hover { background: var(--surface2); }
+.quiz-q input[type="radio"] { margin-right: 10px; accent-color: var(--accent); }
+.quiz-q .explain { display: none; margin-top: 10px; padding: 12px; background: var(--surface2); border-radius: 8px; font-size: 0.85rem; color: var(--accent); }
+.quiz-q .explain.show { display: block; }
+
+.btn { display: inline-block; padding: 12px 28px; border-radius: 30px; border: none; cursor: pointer; font-weight: 700; font-size: 0.95rem; font-family: inherit; transition: all 0.2s; }
+.btn-primary { background: linear-gradient(135deg, var(--batch), var(--ec2)); color: #fff; box-shadow: 0 4px 16px rgba(0, 242, 254, 0.25); }
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(0, 242, 254, 0.4); }
+.btn-outline { background: transparent; border: 2px solid var(--border); color: var(--text); }
+.btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+.btn-row { display: flex; gap: 12px; justify-content: center; margin-top: 24px; flex-wrap: wrap; }
+.score-display { text-align: center; font-size: 1.6rem; font-weight: 800; padding: 20px; border-radius: var(--radius); background: var(--surface); margin-bottom: 24px; display: none; }
+
+/* Cheat Sheet */
+.cheat-sheet { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.cheat-item {
+  background: var(--surface); border-radius: var(--radius-sm); padding: 16px 18px;
+  border: 1px solid var(--border); display: flex; align-items: center; gap: 12px; transition: all 0.2s;
+}
+.cheat-item:hover { border-color: var(--accent); transform: translateX(4px); }
+.cheat-item .cs-emoji { font-size: 1.6rem; flex-shrink: 0; }
+.cheat-item .cs-arrow { color: var(--accent); font-weight: 700; flex-shrink: 0; }
+.cheat-item .cs-svc { font-weight: 700; font-size: 0.9rem; }
+
+/* Footer */
+footer { text-align: center; padding: 40px 0; color: var(--muted); font-size: 0.85rem; border-top: 1px solid var(--border); }
+@media (max-width: 640px) {
+  nav { gap: 6px; padding: 10px; }
+  nav a { font-size: 0.73rem; padding: 5px 10px; }
+  .card-grid, .flashcard-grid { grid-template-columns: 1fr; }
+  .tree-branches { flex-direction: column; }
+  .hero { padding: 60px 16px 50px; }
+  section { padding: 40px 0; }
+  .comp-table { font-size: 0.75rem; }
+}
+</style>
+</head>
+<body>
+
+<div id="progress-wrap"><div id="progress-bar"></div></div>
+
+<nav>
+  <a href="#hero">🏠 Home</a>
+  <a href="#tree">🌳 Decision Tree</a>
+  <a href="#cards">🃏 Service Cards</a>
+  <a href="#concepts">📖 Concepts</a>
+  <a href="#compare">📊 Compare</a>
+  <a href="#memory">🧠 Memory</a>
+  <a href="#scenarios">🎯 Scenarios</a>
+  <a href="#quiz">📝 Quiz</a>
+  <a href="#cheatsheet">📋 Cheat Sheet</a>
+</nav>
+
+<!-- ==================== HERO ==================== -->
+<section class="hero" id="hero">
+  <div class="hero-icons">
+    <span>💻</span><span>⚙️</span><span>🐳</span><span>☸️</span><span>🚀</span><span>📶</span><span>🏢</span>
+  </div>
+  <h1>AWS Compute, Containers, &amp; Engagement</h1>
+  <p>Cloud Practitioner study workspace: deploy applications, optimize infrastructure scale, and orchestrate container fabrics with confidence.</p>
+  <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;font-size:0.82rem;color:var(--muted)">
+    <span>🔵 Compute</span><span>🔷 Containers</span><span>🟢 Engagement &amp; Support</span>
+  </div>
+</section>
+
+<!-- ==================== GRAPHICS & TOPOLOGY DIAGRAM ==================== -->
+<div class="container" style="margin-top: 40px;">
+  <div class="topology-card">
+    <h3 style="color: #FFF; margin-bottom: 6px;">🗺️ Structural Core Topology Mapping</h3>
+    <p class="subtitle" style="text-align: left; margin-bottom: 20px;">Interactive map tracing infrastructure deployment modes from localized customer footprints up through managed container runtimes.</p>
+    <div class="topology-container">
+      <svg viewBox="0 0 900 320" width="100%" height="100%" style="display: block; min-width: 800px;">
+        <!-- Boundaries -->
+        <rect x="10" y="40" width="220" height="260" rx="8" fill="none" stroke="#34D399" stroke-width="1.5" stroke-dasharray="4 4"/>
+        <text x="20" y="28" fill="#34D399" font-size="10" font-weight="bold" letter-spacing="0.5">LOCAL &amp; CUSTOMER ENGAGEMENT</text>
+        
+        <rect x="260" y="40" width="620" height="260" rx="8" fill="none" stroke="#00F2FE" stroke-width="1.5"/>
+        <text x="270" y="28" fill="#00F2FE" font-size="10" font-weight="bold" letter-spacing="0.5">AWS GLOBAL CLOUD REGION</text>
+
+        <!-- Nodes: Local -->
+        <rect x="30" y="70" width="180" height="45" rx="6" fill="#1A1A2E" stroke="rgba(255,255,255,0.1)"/>
+        <text x="45" y="96" fill="#FFF" font-size="11">🏢 AWS Outposts Frame</text>
+
+        <rect x="30" y="145" width="180" height="45" rx="6" fill="#1A1A2E" stroke="rgba(255,255,255,0.1)"/>
+        <text x="45" y="171" fill="#FFF" font-size="11">🤝 AWS IQ Marketplace</text>
+
+        <rect x="30" y="220" width="180" height="45" rx="6" fill="#1A1A2E" stroke="rgba(255,255,255,0.1)"/>
+        <text x="45" y="246" fill="#FFF" font-size="11">ℹ️ AWS Support Framework</text>
+
+        <!-- Nodes: Compute -->
+        <rect x="280" y="70" width="170" height="95" rx="6" fill="#111122" stroke="#00F2FE" stroke-width="1"/>
+        <text x="290" y="88" fill="#94A3B8" font-size="9" font-weight="bold">COMPUTE RUNTIMES</text>
+        <rect x="295" y="102" width="140" height="24" rx="4" fill="#1A1A2E"/>
+        <text x="305" y="118" fill="#E2E8F0" font-size="11">💻 Amazon EC2 Box</text>
+        <rect x="295" y="132" width="140" height="24" rx="4" fill="#1A1A2E"/>
+        <text x="305" y="148" fill="#E2E8F0" font-size="10">💡 Amazon Lightsail VPS</text>
+
+        <rect x="280" y="185" width="170" height="100" rx="6" fill="#111122" stroke="#00F2FE" stroke-width="1"/>
+        <text x="290" y="202" fill="#94A3B8" font-size="9" font-weight="bold">RAPID DEPLOYMENTS</text>
+        <rect x="295" y="215" width="140" height="24" rx="4" fill="#1A1A2E"/>
+        <text x="305" y="231" fill="#E2E8F0" font-size="11">🌱 Elastic Beanstalk</text>
+        <rect x="295" y="246" width="140" height="24" rx="4" fill="#1A1A2E"/>
+        <text x="305" y="262" fill="#E2E8F0" font-size="11">📍 AWS Local Zones</text>
+
+        <!-- Nodes: Containers -->
+        <rect x="475" y="70" width="190" height="215" rx="6" fill="#111122" stroke="#38BDF8" stroke-width="1"/>
+        <text x="490" y="92" fill="#38BDF8" font-size="10" font-weight="bold">CONTAINER CLUSTERING</text>
+        
+        <rect x="495" y="110" width="150" height="38" rx="4" fill="#1A1A2E"/>
+        <text x="505" y="133" fill="#FFF" font-size="11">🐳 Amazon ECS Task</text>
+        
+        <rect x="495" y="160" width="150" height="38" rx="4" fill="#1A1A2E"/>
+        <text x="505" y="183" fill="#FFF" font-size="11">☸️ Amazon EKS Fabric</text>
+
+        <rect x="495" y="222" width="150" height="38" rx="4" fill="#162535" stroke="rgba(56,189,248,0.3)"/>
+        <text x="505" y="245" fill="#38BDF8" font-size="11">📦 Amazon ECR Registry</text>
+
+        <!-- Nodes: Batch -->
+        <rect x="690" y="70" width="165" height="215" rx="6" fill="#111122" stroke="#00F2FE" stroke-width="1"/>
+        <text x="705" y="92" fill="#94A3B8" font-size="9" font-weight="bold">ASYNC MASSIVE BATCH</text>
+        <rect x="702" y="115" width="140" height="150" rx="4" fill="#1A1A2E"/>
+        <text x="715" y="145" fill="#FFF" font-size="11" font-weight="bold">⚙️ AWS Batch Engine</text>
+        <text x="715" y="175" fill="#94A3B8" font-size="10">• Dynamic Spot Alloc</text>
+        <text x="715" y="195" fill="#94A3B8" font-size="10">• High Throughput</text>
+
+        <!-- Pathways Lines -->
+        <path d="M 210 92 L 280 110" stroke="rgba(255,255,255,0.15)" stroke-width="1.5" fill="none"/>
+        <path d="M 450 115 L 475 130" stroke="rgba(56,189,248,0.4)" stroke-width="1.5" fill="none"/>
+        <path d="M 645 241 L 495 241" stroke="#38BDF8" stroke-width="1.2" stroke-dasharray="3 3" fill="none"/>
+        <path d="M 665 130 L 690 130" stroke="rgba(255,255,255,0.15)" stroke-width="1.5" fill="none"/>
+      </svg>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== DECISION TREE ==================== -->
+<section id="tree"><div class="container">
+  <h2>🌳 The Core Architectural Decision Tree</h2>
+  <p class="subtitle">Click any logic branch to map your infrastructural requirements directly to the correct destination AWS platform!</p>
+  <div class="tree-container">
+    <div class="tree-root"><div class="root-node">🤔 What architectural paradigm does my system target?</div></div>
+    <div class="tree-branches">
+      <button class="tree-branch" data-svc="batch" style="border-top:3px solid var(--batch)">⚙️ Asynchronous Bulk Processing</button>
+      <button class="tree-branch" data-svc="ec2" style="border-top:3px solid var(--ec2)">💻 Total Native OS Administration</button>
+      <button class="tree-branch" data-svc="beanstalk" style="border-top:3px solid var(--beanstalk)">🌱 Rapid Automated PaaS Code Deploy</button>
+      <button class="tree-branch" data-svc="lightsail" style="border-top:3px solid var(--lightsail)">💡 Simple Bundled VPS Sanboxes</button>
+      <button class="tree-branch" data-svc="outposts" style="border-top:3px solid var(--outposts)">🏢 On-Premises Physical Hardware</button>
+      <button class="tree-branch" data-svc="containers" style="border-top:3px solid var(--containers)">🐳 Containerized Execution Fabrics</button>
+    </div>
+    <div class="tree-answer" id="treeAnswer"></div>
+  </div>
+</div></section>
+
+<!-- ==================== SERVICE CARDS ==================== -->
+<section id="cards"><div class="container">
+  <h2>🃏 Infrastructure Service Cards</h2>
+  <p class="subtitle">Bite-sized modules defining core environments, absolute trigger points, and essential baseline differentiators.</p>
+  <div class="card-grid" id="cardGrid"></div>
+</div></section>
+
+<!-- ==================== CONCEPTS ==================== -->
+<section id="concepts"><div class="container">
+  <h2>📖 Core Infrastructure Concepts</h2>
+  <p class="subtitle">Essential structural paradigms that appear continuously throughout your architectural validation paths.</p>
+  <div class="concept-grid">
+    <!-- ECS vs EKS -->
+    <div class="concept-card">
+      <h3>🐳 ECS vs ☸️ Managed EKS</h3>
+      <table class="concept-table">
+        <tr><th>AWS ECS</th><th>Amazon EKS</th></tr>
+        <tr><td>Proprietary AWS-native container tool orchestrator</td><td>Standardized on open-source upstream <b>Kubernetes</b></td></tr>
+        <tr><td>Low implementation and management overhead</td><td>Higher learning curve with complex pod logic configurations</td></tr>
+        <tr><td>Deeply integrated into core cloud networks and IAM</td><td>High portable parity across multi-cloud deployments</td></tr>
+        <tr><td><b>→ Use for simple microservices</b></td><td><b>→ Use for specialized K8s standards</b></td></tr>
+      </table>
+    </div>
+    <!-- Outposts vs Local Zones vs Wavelength -->
+    <div class="concept-card">
+      <h3>📍 Local Edge Models Comparison</h3>
+      <table class="concept-table">
+        <tr><th>Feature</th><th>Outposts / Local Zones / Wavelength</th></tr>
+        <tr><td><b>Outposts</b></td><td>Physical managed racks shipped inside your data center</td></tr>
+        <tr><td><b>Local Zones</b></td><td>AWS compute nodes inside high-population metro hubs</td></tr>
+        <tr><td><b>Wavelength</b></td><td>Embeds infrastructure natively inside carrier <b>5G nodes</b></td></tr>
+        <tr><td><b>Latency Focus</b></td><td>Sub-10ms delivery close to regional edge components</td></tr>
+      </table>
+    </div>
+    <!-- Support vs AMS vs IQ -->
+    <div class="concept-card">
+      <h3>🛠️ External Operations &amp; Support</h3>
+      <table class="concept-table">
+        <tr><th>AWS Support</th><th>Managed Services (AMS) / IQ</th></tr>
+        <tr><td>Tier-based troubleshooting guidance and platform checkups</td><td>AWS personnel maintaining production operations on your behalf</td></tr>
+        <tr><td>TAM resources for Enterprise planning</td><td>Direct marketplace matching independent certified freelancers</td></tr>
+        <tr><td><b>→ Reactive break-fix</b></td><td><b>→ Complete outsourcing (AMS) / Freelancing (IQ)</b></td></tr>
+      </table>
+    </div>
+  </div>
+</div></section>
+
+<!-- ==================== COMPARISON TABLE ==================== -->
+<section id="compare"><div class="container">
+  <h2>📊 Master Infrastructure Comparison Matrix</h2>
+  <p class="subtitle">Your integrated scannable directory maps categories, deployments, and optimal architecture usage models.</p>
+  <div class="comp-table-wrap">
+    <table class="comp-table" id="compTable"></table>
+  </div>
+</div></section>
+
+<!-- ==================== MEMORY / FLASHCARDS ==================== -->
+<section id="memory"><div class="container">
+  <h2>🧠 Active Recall Flashcards</h2>
+  <p class="subtitle">Click any deployment card to flip it and reveal the direct translation mnemonics immediately!</p>
+  <div class="flashcard-grid" id="flashcardGrid"></div>
+</div></section>
+
+<!-- ==================== SCENARIO PRACTICE ==================== -->
+<section id="scenarios"><div class="container">
+  <h2>🎯 Practical Architecture Scenarios</h2>
+  <p class="subtitle">Evaluate these real-world design requirements and select the ideal cloud computing option.</p>
+  <div class="scenario-grid" id="scenarioGrid"></div>
+  <div style="text-align:center;margin-top:16px;font-size:0.9rem;color:var(--muted)">
+    Current Workspace Score: <span id="scenarioScore" style="color:var(--accent);font-weight:700;">0</span> / 10
+  </div>
+</div></section>
+
+<!-- ==================== QUIZ ==================== -->
+<section id="quiz"><div class="container">
+  <h2>📝 Full Architecture Examination</h2>
+  <p class="subtitle">Complete practitioner-level structural checkup. Pick one selection per block to validate your scores.</p>
+  <div class="quiz-container" id="quizContainer"></div>
+  <div class="score-display" id="quizScore"></div>
+  <div class="btn-row">
+    <button class="btn btn-primary" id="quizSubmit">Submit Architecture Paper</button>
+    <button class="btn btn-outline" id="quizRetry" style="display:none">🔄 Reset Examination</button>
+  </div>
+</div></section>
+
+<!-- ==================== CHEAT SHEET ==================== -->
+<section id="cheatsheet"><div class="container">
+  <h2>📋 Rapid Structural Cheat Sheet</h2>
+  <p class="subtitle">High-speed cognitive routing table mapping key triggers to core deployment fabrics.</p>
+  <div class="cheat-sheet" id="cheatSheet"></div>
+</div></section>
+
+<footer>
+  <p>AWS Architecture Study Workspaces · Compute, Containers, &amp; Engagement Compendium · 2026 Edition ✨</p>
+</footer>
+
+<script>
+// ===== VECTOR BLUEPRINTS DATA MAPPING =====
+const inlineSVGs = {
+  batch: `<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#00F2FE" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`,
+  ec2: `<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#4FACFE" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="10" y1="6" x2="10.01" y2="6"/><line x1="14" y1="6" x2="14.01" y2="6"/><line x1="18" y1="6" x2="18.01" y2="6"/><line x1="6" y1="18" x2="18" y2="18"/></svg>`,
+  beanstalk: `<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#00FF87" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>`,
+  lightsail: `<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#FFB347" stroke-width="2"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A5.5 5.5 0 0 0 7.5 8c0 1.3.5 2.6 1.5 3.5.8.8 1.3 1.5 1.5 2.5"/><line x1="9" y1="18" x2="15" y2="18"/></svg>`,
+  localzones: `<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#00F2FE" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`,
+  outposts: `<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#F53803" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="18" y2="6"/></svg>`,
+  wavelength: `<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#FF007F" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14.08 0M1.42 9a16 16 0 0 1 21.16 0M12 20a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/></svg>`,
+  ecr: `<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>`,
+  ecs: `<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>`,
+  eks: `<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
+  activate: `<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="2"><path d="M12 2s5 3.85 5 8.5a5 5 0 0 1-10 0C7 5.85 12 2 12 2z"/></svg>`,
+  iq: `<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>`,
+  ams: `<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91z"/></svg>`,
+  support: `<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`
+};
+
+// ===== CORE SERVICE ARRAY =====
+const services = {
+  batch: {
+    name: 'AWS Batch', icon: '⚙️', cls: 'batch', cat: 'Compute',
+    explain: 'Dynamically provisions the optimal quantity and type of compute resources based on the volume and specific requirements of the submitted batch jobs.',
+    example: 'Executing high-throughput automated asynchronous text parsing arrays or nightly media conversions.',
+    triggers: '"Bulk compute scheduling", "parallel batch arrays", "HPC automated queues"',
+    useThis: 'You execute hundreds of thousands of computing chunks concurrently without managing servers.',
+    noConfuse: 'Do not confuse with AWS Lambda (caps at 15 minutes). Batch coordinates long, heavy background processing workloads.'
+  },
+  ec2: {
+    name: 'Amazon EC2', icon: '💻', cls: 'ec2', cat: 'Compute',
+    explain: 'Provides secure, resizable virtual server capacity in the cloud, granting architects full configuration root control over operating systems and memory disks.',
+    example: 'Hosting traditional legacy monolith architectures with strict low-level OS configuration needs.',
+    triggers: '"Virtual servers", "full OS control", "resizable instances", "infrastructure IaaS"',
+    useThis: 'You require an elastic virtual host where your teams control patching, custom kernels, and system networks.',
+    noConfuse: 'Do not confuse with Amazon Lightsail. EC2 offers advanced enterprise granularity, scale, and dynamic complex VPC properties.'
+  },
+  beanstalk: {
+    name: 'AWS Elastic Beanstalk', icon: '🌱', cls: 'beanstalk', cat: 'Compute',
+    explain: 'An easy-to-use Platform-as-a-Service (PaaS) for deploying and scaling web applications and services directly from source code while maintaining absolute control over the underlying assets.',
+    example: 'Rapidly launching a standard Node.js, Python, or Java web app instance pipeline without setting up core auto-scaling parameters.',
+    triggers: '"Platform-as-a-Service PaaS", "upload app code direct", "automatic configuration provisioning"',
+    useThis: 'You want to deploy web services immediately without dealing with server designs but want the choice to modify configurations later.',
+    noConfuse: 'Do not confuse with AWS CloudFormation. CloudFormation demands declarative systemic blueprints; Beanstalk natively digests code files directly.'
+  },
+  lightsail: {
+    name: 'Amazon Lightsail', icon: '💡', cls: 'lightsail', cat: 'Compute',
+    explain: 'Offers simple virtual private servers (VPS), containers, network attachments, and databases packaged under static, highly predictable flat monthly fees.',
+    example: 'Spinning up rapid WordPress sandboxes, prototype dev instances, or small business tracking websites.',
+    triggers: '"Predictable flat pricing", "simplified VPS deployment", "all-in-one stack starter packages"',
+    useThis: 'Small engineering projects, individuals, or startups require rapid setups without navigating complex AWS enterprise dashboards.',
+    noConfuse: 'Do not confuse with Amazon EC2. EC2 relies on variable, fine-grained pay-as-you-go variables; Lightsail relies on clear, simple flat bills.'
+  },
+  localzones: {
+    name: 'AWS Local Zones', icon: '📍', cls: 'localzones', cat: 'Compute',
+    explain: 'Places compute, storage, database, and other selective AWS services physically close to large population centers, industrial clusters, and heavy technical hubs.',
+    example: 'Delivering real-time localized gaming platforms or graphic rendering systems to users in specific metropolitan zones.',
+    triggers: '"Single-digit millisecond latency", "geographically targeted population centers", "localized metro nodes"',
+    useThis: 'Your users require extreme low-latency application responses without your company building brick-and-mortar server sites nearby.',
+    noConfuse: 'Do not confuse with Amazon CloudFront. CloudFront speeds up assets using global read caching edge hubs; Local Zones run localized execution workflows natively.'
+  },
+  outposts: {
+    name: 'AWS Outposts', icon: '🏢', cls: 'outposts', cat: 'Compute',
+    explain: 'A fully managed hybrid framework that extends native AWS cloud primitives, endpoints, and deployment options directly to your on-premises physical data facility.',
+    example: 'Fulfilling strict data residency laws that dictate health processing databases must run within corporate buildings.',
+    triggers: '"Hybrid cloud infrastructure", "on-premises hardware deployments", "data sovereignty compliance"',
+    useThis: 'You must maintain data processing tasks locally on physical business racks due to compliance or severe direct connection latency bounds.',
+    noConfuse: 'Do not confuse with AWS Local Zones. Local Zones are AWS-owned facilities in major cities; Outposts involves physical hardware frames shipped to your office.'
+  },
+  wavelength: {
+    name: 'AWS Wavelength', icon: '📶', cls: 'wavelength', cat: 'Compute',
+    explain: 'Optimizes mobile edge operations by embedding AWS computing nodes natively directly within public telecom carrier 5G wireless networks.',
+    example: 'Processing split-second telemetry parameters from smart connected cars or streaming real-time AR video segments.',
+    triggers: '"Public carrier 5G nodes", "ultra-low latency mobile devices", "mobile edge compute application layers"',
+    useWhen: 'Your applications rely on instant, low-latency communication routes passing straight through cellular carrier arrays out to mobile users.',
+    noConfuse: 'Do not confuse with AWS Outposts. Outposts targets internal corporate enterprise premises; Wavelength hooks directly into telecom cellular hubs.'
+  },
+  ecr: {
+    name: 'Amazon ECR', icon: '📦', cls: 'containers', cat: 'Containers',
+    explain: 'A secure, fully managed container image registry framework used to catalog, version control, store, and scan Docker artifacts safely.',
+    example: 'Hosting your baseline microservice runtime packages, which are automatically pulled during production image deployments.',
+    triggers: '"Docker registry repository", "store container images safely", "image software vulnerability scanning"',
+    useThis: 'You require a central hub to host software container images integrated with IAM roles.',
+    noConfuse: 'Do not confuse with Docker Hub. Docker Hub is an external open registry; ECR is AWS\'s native secure container cataloging layer.'
+  },
+  ecs: {
+    name: 'Amazon ECS', icon: '🐳', cls: 'containers', cat: 'Containers',
+    explain: 'A highly scalable, fast, AWS-engineered container management platform designed to orchestrate Docker containers across server clusters.',
+    example: 'Running highly optimized enterprise cloud microservices without configuring complicated open-source container platforms.',
+    triggers: '"AWS-native container orchestration", "lightweight container tasks", "Fargate seamless task runtimes"',
+    useThis: 'You require a highly scalable container cluster engine out-of-the-box that is deeply connected to core AWS networks and load balancers.',
+    noConfuse: 'Do not confuse with Amazon EKS. ECS uses proprietary AWS-designed primitives; EKS is built on open-source upstream Kubernetes configurations.'
+  },
+  eks: {
+    name: 'Amazon EKS', icon: '☸️', cls: 'containers', cat: 'Containers',
+    explain: 'A fully managed container environment that lets teams deploy, maintain, and scale container clusters using open-source Kubernetes standards on AWS.',
+    example: 'Migrating an existing complex on-premises Kubernetes configuration out to the public cloud without rebuilding manifest designs.',
+    triggers: '"Managed Kubernetes infrastructure", "open-source container parity", "native K8s pods or helm logic"',
+    useThis: 'Your engineering teams have structured their software configurations around upstream Kubernetes ecosystems and require multi-cloud parity.',
+    noConfuse: 'Do not confuse with Amazon ECS. ECS is built on internal AWS architecture; EKS is built on open-source Kubernetes foundations.'
+  },
+  activate: {
+    name: 'AWS Activate', icon: '🚀', cls: 'engagement', cat: 'Engagement',
+    explain: 'Provides early-stage founders with financial tools, including promo architecture credits, training paths, and technical advisor connections.',
+    example: 'A seed-stage digital company bootstrapping their minimum viable product build safely using free development resources.',
+    triggers: '"Startup platform credits", "bootstrap training packages", "free architecture mentorship tracks"',
+    useThis: 'You are an early-stage startup looking to offset startup computing costs and fast-track architecture patterns.',
+    noConfuse: 'Do not confuse with AWS Organizations. Organizations manages internal account structures; Activate provides financial credits and technical tool assistance.'
+  },
+  iq: {
+    name: 'AWS IQ', icon: '🤝', cls: 'engagement', cat: 'Engagement',
+    explain: 'A secure collaboration marketplace connecting cloud clients with certified external third-party experts and consultants for project tasks.',
+    example: 'Hiring a verified freelancer to configure an advanced corporate network setup directly inside your sandbox environment.',
+    triggers: '"Contract certified freelancers", "marketplace project tasks", "secure interactive hands-on expert help"',
+    useThis: 'You need an immediate freelance technician to perform explicit configuration workloads inside your active project accounts.',
+    noConfuse: 'Do not confuse with AWS Support. Support features internal platform helpdesk workers; IQ is a market to hire independent contractors.'
+  },
+  ams: {
+    name: 'AWS Managed Services (AMS)', icon: '🛠️', cls: 'engagement', cat: 'Engagement',
+    explain: 'Operates and controls infrastructure pathways on your behalf, providing ongoing patch execution, security automation, and configuration guardrails.',
+    example: 'An enterprise outsourcing day-to-day operations tasks entirely to AWS so their teams can focus on product code.',
+    triggers: '"Outsource infrastructure operations completely", "automated system patching updates", "day-to-day configuration governance"',
+    useThis: 'Large corporate frameworks lack cloud infrastructure operational capacity and choose to offload management workflows to AWS systems.',
+    noConfuse: 'Do not confuse with AWS Professional Services. ProServ provides high-level strategic advisory teams; AMS delivers continuous structural operations.'
+  },
+  support: {
+    name: 'AWS Support', icon: 'ℹ️', cls: 'engagement', cat: 'Engagement',
+    explain: 'A tier-based customer service strategy offering varying tiers of technical help (Developer, Business, Enterprise) to evaluate performance and fix errors.',
+    example: 'Opening an urgent technical ticket when unexpected service downtime impacts regional network pipelines.',
+    triggers: '"Technical help desk tiers", "TAM advisory checkpoints", "break-fix application guidance tickets"',
+    useThis: 'Your team requires direct help channels for platform errors, billing explanations, and strategic system verification reviews.',
+    noConfuse: 'Do not confuse with AWS IQ. IQ is a portal to contract external developers; Support handles platform issues and cloud optimization reviews.'
+  }
+};
+
+const treeAnswers = {
+  batch: { title:'⚙️ AWS Batch', text:'Coordinates massive processing runs across arrays of compute nodes automatically. Choose when running <b>"bulk asynchronous jobs"</b> or <b>"HPC parallel batch queues"</b>.' },
+  ec2: { title:'💻 Amazon EC2', text:'The quintessential cloud server. Choose when a scenario demands <b>"complete root system configuration privileges"</b> or standard virtual servers.' },
+  beanstalk: { title:'🌱 AWS Elastic Beanstalk', text:'Platform-as-a-Service system. Upload code strings and let the service automatically provision everything, while keeping full server options open.' },
+  lightsail: { title:'💡 Amazon Lightsail', text:'All-in-one low-cost packages for web sites or app sandboxes. Key marker: <b>"predictable flat monthly fees"</b>.' },
+  outposts: { title:'🏢 AWS Outposts', text:'Extends AWS infrastructure directly to your facility. Key marker: <b>"hybrid architecture data center data sovereignty laws"</b>.' },
+  containers: { title:'🐳 Container Environments', text:'Deploys software tasks inside Docker frameworks. Select <b>ECS</b> for AWS-native setups, <b>EKS</b> for Kubernetes workflows, and <b>ECR</b> to store images.' }
+};
+
+// ===== DECISION TREE WORKFLOW =====
+document.querySelectorAll('.tree-branch').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tree-branch').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const ans = treeAnswers[btn.dataset.svc];
+    const div = document.getElementById('treeAnswer');
+    div.innerHTML = `<strong style="font-size:1.1rem; color:var(--accent);">${ans.title}</strong><p style="margin-top:8px;">${ans.text}</p>`;
+    div.classList.add('show');
+    markProgress('tree');
+  });
+});
+
+// ===== CARDS RENDER LOOP (With Dynamic SVG Blueprints) =====
+const cardGrid = document.getElementById('cardGrid');
+Object.entries(services).forEach(([key, s]) => {
+  const div = document.createElement('div');
+  div.className = `card ${s.cls}`;
+  div.innerHTML = `
+    <div class="icon">${s.icon}</div>
+    <div class="name">${s.name}</div>
+    <div class="badge-row">
+      <span class="badge">${s.cat}</span>
+    </div>
+    <div class="card-media-box">
+      ${inlineSVGs[key] || ''}
+    </div>
+    <p style="font-size:0.85rem;color:var(--muted);margin:8px 0;">${s.explain}</p>
+    <p style="font-size:0.82rem;"><b>Real-world Architecture:</b> ${s.example}</p>
+    <p class="trigger-words">🔍 Exam Triggers: ${s.triggers}</p>
+    <p class="use-this">✅ Use this when: ${s.useThis}</p>
+    <p class="dont-confuse">⚠️ Don't confuse with: ${s.noConfuse}</p>
+  `;
+  cardGrid.appendChild(div);
+  div.addEventListener('click', () => markProgress('cards'));
+});
+
+// ===== MATRIX COMPARISON TABLE BUILDER =====
+const compData = [
+  ['AWS Batch','Compute','Asynchronous Processing','Massive asynchronous jobs processing loops','AWS Lambda (15-min thresholds)'],
+  ['Amazon EC2','Compute','Infrastructure-as-a-Service','Total OS control over virtual hosts configurations','Amazon Lightsail (bundled packages)'],
+  ['AWS Elastic Beanstalk','Compute','Platform-as-a-Service','Rapid app deployments skipping manual platform configuration','AWS CloudFormation (declarative scripting blueprints)'],
+  ['Amazon Lightsail','Compute','Simplified Virtual Server','Predictable flat monthly budgets for sandbox systems','Amazon EC2 (enterprise enterprise architectures)'],
+  ['AWS Local Zones','Compute','Low-Latency Hybrid Nodes','Running applications close to major metropolitan centers','Amazon CloudFront (asset static file reading caches)'],
+  ['AWS Outposts','Compute','On-Premises Hybrid Edge','Physical enterprise equipment racks operating in private offices','AWS Local Zones (public AWS metro facilities)'],
+  ['AWS Wavelength','Compute','5G Mobile Edge Network','Mobile software operations running on wireless networks','AWS Outposts (private internal office frames)'],
+  ['Amazon ECR','Containers','Secure Docker Registry','Hosting, version cataloging, and checking image artifacts','Docker Hub (external platform repositories)'],
+  ['Amazon ECS','Containers','Native Orchestrator','Deploying cloud containers using native AWS engines','Amazon EKS (Kubernetes manifest setups)'],
+  ['Amazon EKS','Containers','Managed Kubernetes','Running microservices over open-source Kubernetes hubs','Amazon ECS (AWS proprietary container systems)'],
+  ['AWS Activate','Customer Engagement','Startup Incubator Support','Bootstrap architecture credits and foundational coaching','AWS Organizations (structural organizational control hierarchies)'],
+  ['AWS IQ','Customer Engagement','Freelance Task Marketplace','Hiring certified contractors for direct technical adjustments','AWS Support (help desk support personnel networks)'],
+  ['AWS Managed Services','Customer Engagement','Outsourcing Operations','Offloading systemic operations, updates, and runbook tasks','AWS Professional Services (high-level advisory consultation groups)'],
+  ['AWS Support','Customer Engagement','Platform Service Desk','Technical troubleshooting support tickets and TAM reviews','AWS IQ (hiring freelancers to build applications manually)']
+];
+const compTable = document.getElementById('compTable');
+compTable.innerHTML = `<thead><tr><th>Service Fabric</th><th>Category</th><th>Deployment Paradigm</th><th>Exam Keywords</th><th>Avoid Confusing With</th></tr></thead><tbody>${
+  compData.map(r => {
+    let chipStyle = r[1] === 'Compute' ? 'cat-compute' : r[1] === 'Containers' ? 'cat-container' : 'cat-engagement';
+    return `<tr><td><b>${r[0]}</b></td><td><span class="cat-chip ${chipStyle}">${r[1]}</span></td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td></tr>`;
+  }).join('')
+}</tbody>`;
+
+// ===== ACTIVE RECALL FLASHCARDS =====
+const flashcardData = [
+  ['⚙️ AWS Batch', 'Async Bulk Processing Engine', 'batch'],
+  ['💻 Amazon EC2', 'Total Native OS Administration Machine', 'ec2'],
+  ['🌱 Elastic Beanstalk', 'PaaS Code Deployer', 'beanstalk'],
+  ['💡 Amazon Lightsail', 'Bundled Flat Pricing VPS Packs', 'lightsail'],
+  ['📍 Local Zones', 'Sub-10ms Metro Centers Edge Node', 'localzones'],
+  ['🏢 AWS Outposts', 'On-Premises Physical Rack Frames', 'outposts'],
+  ['📶 AWS Wavelength', 'Carrier 5G Edge Network Systems', 'wavelength'],
+  ['📦 Amazon ECR', 'Secure Container Image Registry Store', 'ecr'],
+  ['🐳 Amazon ECS', 'AWS Native Container Manager Fabric', 'ecs'],
+  ['☸️ Amazon EKS', 'Upstream Managed Kubernetes Framework', 'eks']
+];
+const fgrid = document.getElementById('flashcardGrid');
+flashcardData.forEach(([front, back, key]) => {
+  const div = document.createElement('div');
+  div.className = 'flashcard';
+  div.innerHTML = `
+    <div class="flashcard-inner">
+      <div class="flashcard-front">
+        <span>${front.split(' ')[0]}</span>
+        <p>${front.split(' ').slice(1).join(' ')}</p>
+      </div>
+      <div class="flashcard-back">
+        ${back}
+      </div>
+    </div>`;
+  div.addEventListener('click', () => { div.classList.toggle('flipped'); markProgress('memory'); });
+  fgrid.appendChild(div);
+});
+
+// ===== INTERACTIVE PRACTICE SCENARIOS =====
+const scenarios = [
+  { q:'A firm wants to run hundreds of thousands of nightly offline background computation steps using variable spot capacities.', a:'AWS Batch', opts:['AWS Batch','Amazon ECS','Amazon EC2','AWS Outposts'] },
+  { q:'An engineer needs root access to install a custom operating system package configuration on a virtual server host.', a:'Amazon EC2', opts:['Amazon EC2','AWS Elastic Beanstalk','Amazon Lightsail','Amazon ECS'] },
+  { q:'A startup code project wants to deploy a simple API package without configuring individual VPC setups or monitoring charts manually.', a:'AWS Elastic Beanstalk', opts:['AWS Elastic Beanstalk','AWS CloudFormation','Amazon EC2','Amazon EKS'] },
+  { q:'A developer requests an isolated cloud testing box with flat predictable pricing grids and simple component boxes.', a:'Amazon Lightsail', opts:['Amazon Lightsail','Amazon EC2','AWS Local Zones','AWS Batch'] },
+  { q:'A bank needs identical AWS runtime platforms placed locally within their private city facility boundaries due to data residency compliance.', a:'AWS Outposts', rx:'outposts', opts:['AWS Outposts','AWS Local Zones','AWS Wavelength','Amazon EC2'] },
+  { q:'A software group wants to map real-time data streaming structures using cellular provider carrier networks out to mobile edge gadgets.', a:'AWS Wavelength', opts:['AWS Wavelength','AWS Local Zones','Amazon CloudFront','Amazon ECS'] },
+  { q:'An application environment requires storing version-controlled Docker components securely and scanning package vulnerability patterns.', a:'Amazon ECR', opts:['Amazon ECR','Amazon ECS','Amazon EKS','Docker Hub'] },
+  { q:'A company targets light, native infrastructure container clusters without orchestrating massive open-source frameworks.', a:'Amazon ECS', opts:['Amazon ECS','Amazon EKS','AWS Elastic Beanstalk','Amazon EC2'] },
+  { q:'A technical team requires absolute upstream open-source cloud parity with their established localized Kubernetes deployment configurations.', a:'Amazon EKS', opts:['Amazon EKS','Amazon ECS','AWS Outposts','AWS CloudFormation'] },
+  { q:'An organization requires a trusted expert to modify their multi-tier application environment layouts over a secure freelance contract basis.', a:'AWS IQ', opts:['AWS IQ','AWS Support','AWS Managed Services','AWS Professional Services'] }
+];
+const scenarioGrid = document.getElementById('scenarioGrid');
+let scenarioScore = 0;
+const scenarioStates = new Array(scenarios.length).fill(false);
+scenarios.forEach((sc, i) => {
+  const div = document.createElement('div');
+  div.className = 'scenario-card';
+  div.innerHTML = `
+    <p>🧩 <b>Scenario ${i+1}:</b> ${sc.q}</p>
+    <select data-idx="${i}"><option value="">-- Choose a service match --</option>${sc.opts.map(o => `<option value="${o}">${o}</option>`).join('')}</select>
+    <div class="feedback" data-idx="${i}"></div>
+  `;
+  scenarioGrid.appendChild(div);
+});
+scenarioGrid.addEventListener('change', (e) => {
+  if (e.target.tagName !== 'SELECT') return;
+  const idx = parseInt(e.target.dataset.idx);
+  const fb = scenarioGrid.querySelector(`.feedback[data-idx="${idx}"]`);
+  const card = e.target.closest('.scenario-card');
+  if (e.target.value === scenarios[idx].a) {
+    fb.textContent = '✅ Correct! Ideal design architectural selection.';
+    fb.className = 'feedback correct';
+    card.classList.add('correct-border');
+    card.classList.remove('wrong-border');
+    if (!scenarioStates[idx]) { scenarioStates[idx] = true; scenarioScore++; }
+  } else {
+    fb.textContent = `❌ Incorrect selection. The optimal choice is "${scenarios[idx].a}".`;
+    fb.className = 'feedback wrong';
+    card.classList.add('wrong-border');
+    card.classList.remove('correct-border');
+    if (scenarioStates[idx]) { scenarioStates[idx] = false; scenarioScore--; }
+  }
+  document.getElementById('scenarioScore').textContent = scenarioScore;
+  markProgress('scenarios');
+});
+
+// ===== PRACTITIONER TRIAL QUIZ MULTIPLE CHOICE =====
+const quizQuestions = [
+  { q:'Which solution should you use to run asynchronous background processes without manual cluster infrastructure intervention?', opts:['AWS Lambda','AWS Batch','Amazon ECS','Amazon Lightsail'], a:1, exp:'AWS Batch optimizes resource scale allocations for mass asynchronous processing schedules.' },
+  { q:'Your deployment blueprints demand total root administrative interaction access inside operating system configurations. Which framework fits?', opts:['Amazon Lightsail','AWS Elastic Beanstalk','Amazon EC2','Amazon ECS'], a:2, exp:'Amazon EC2 is an Infrastructure-as-a-Service model providing total OS control permissions.' },
+  { q:'A team needs to launch standard web software codes directly into a platform environment while avoiding manual cluster design. Which option is best?', opts:['AWS CloudFormation','AWS Elastic Beanstalk','AWS Systems Manager','Amazon EKS'], a:1, exp:'AWS Elastic Beanstalk delivers PaaS rapidly out-of-the-box directly from source packages.' },
+  { q:'You require simple container nodes or virtual private server runtimes under an static flat monthly payment rate. Which service fits?', opts:['Amazon EC2','Amazon Lightsail','AWS Batch','AWS Local Zones'], a:1, exp:'Amazon Lightsail bundles network capacity, processing, and disks into simple flat pricing packages.' },
+  { q:'Which infrastructure property targets single-digit millisecond latency delivery parameters by placing AWS nodes in high-population metro zones?', opts:['AWS Regions','AWS Local Zones','Amazon CloudFront','AWS Wavelength'], a:2, exp:'AWS Local Zones put processing compute layers geographically close to metropolitan user centers.' },
+  { q:'Which model delivers official managed hardware infrastructure boxes right inside a private datacenter rack room?', opts:['AWS Local Zones','AWS Wavelength','AWS Outposts','AWS Systems Manager'], a:2, exp:'AWS Outposts ships fully managed cloud hardware setups straight onto on-premises positions.' },
+  { q:'To deploy microservices that pass through telecommunication carrier points directly to cellular gadget targets, utilize:', opts:['AWS Wavelength','AWS Local Zones','Amazon Route 53','AWS Direct Connect'], a:0, exp:'AWS Wavelength embeds processing capabilities into public carrier 5G networks.' },
+  { q:'Where can you store, catalog, version control, and sweep Docker package structures for common vulnerabilities?', opts:['Amazon ECS','Docker Hub','Amazon ECR','AWS CodeArtifact'], a:2, exp:'Amazon ECR acts as the native cloud repository matrix to host container artifacts securely.' },
+  { q:'Which engine is AWS\'s native, highly integrated orchestrator alternative to Kubernetes designs?', opts:['Amazon EKS','Amazon ECS','AWS Batch','Amazon Systems Manager'], a:1, exp:'Amazon ECS provides a clean, AWS-engineered alternative to Kubernetes complexity.' },
+  { q:'Your engineering crew demands line-for-line open-source Kubernetes configuration parity for workloads running in separate environments. Choose:', opts:['Amazon ECS','AWS Elastic Beanstalk','Amazon EKS','AWS Outposts'], a:2, exp:'Amazon EKS maintains upstream managed Kubernetes properties for cross-platform compatibility.' },
+  { q:'An early-stage organization seeks promotional cloud credit allowances, structural tooling paths, and advisory coaching tracks. Which option fits?', opts:['AWS Organizations','AWS Activate','AWS IQ','AWS Managed Services'], a:1, exp:'AWS Activate provides boot-strapping teams with promotional support credits and architecture tool sets.' },
+  { q:'You want to purchase the contract services of an independent certified third-party developer to configure custom cloud setups inside your secure account framework. Where should you look?', opts:['AWS Support Tiers','AWS Professional Services','AWS IQ','AWS Marketplace'], a:2, exp:'AWS IQ connects customers directly with vetted external certified independent specialists securely.' },
+  { q:'Which solution provides day-to-day operations management, patch tracking runbooks, and automation updates executed on your behalf by AWS?', opts:['AWS Managed Services (AMS)','AWS Professional Services','AWS Support Tiers','AWS CloudTrail'], a:0, exp:'AWS Managed Services (AMS) acts as an operational management extension of your cloud environment.' },
+  { q:'You need to address an official administrative support ticket asking to expand default platform runtime service quotas. Which portal manages this request?', opts:['AWS IQ','AWS Support','AWS Managed Services','AWS Trusted Advisor'], a:1, exp:'AWS Support manages help desk tiers to request quota alterations, account evaluations, and fix system errors.' },
+  { q:'What differentiates Amazon ECS from Amazon EKS in cloud designs?', opts:['ECS cannot scale container nodes','EKS is built around upstream open-source Kubernetes standards; ECS uses internal AWS native patterns','ECS operates only over physical servers','EKS is restricted to Linux operating packages'], a:1, exp:'EKS provides true managed Kubernetes ecosystems; ECS leverages internal AWS operational designs.' },
+  { q:'Which option optimizes delivery specifically over mobile data pipelines instead of standard land fiber lines?', opts:['AWS Local Zones','AWS Wavelength','AWS Outposts','Amazon CloudFront'], a:1, exp:'AWS Wavelength brings processing layers inside carrier 5G wireless stations.' },
+  { q:'What is a fundamental asset of picking Amazon Lightsail over typical Amazon EC2 boxes?', opts:['Uncapped infrastructure options','Predictable baseline pricing designs for straightforward applications','Advanced structural data pipeline tracking','Automated multi-region cluster attachments'], a:1, exp:'Lightsail provides clear bundled costs for standard environments without complex billing attributes.' },
+  { q:'Which system maps structural assets automatically directly out of uploaded developer application code archives?', opts:['AWS CloudFormation','AWS Elastic Beanstalk','AWS Batch','Amazon ECS'], a:1, exp:'Elastic Beanstalk handles the underlying platform provisioning automatically based on uploaded code packages.' },
+  { q:'A dedicated Technical Account Manager (TAM) providing expert architecture optimization insights requires which minimum support layer plan?', opts:['Developer','Business','Enterprise','Basic'], a:2, exp:'The Enterprise Support tier grants projects an expert Technical Account Manager (TAM).' },
+  { q:'A research workspace handles extensive, asynchronous, non-interactive software processing actions that execute overnight. Which framework applies?', opts:['Amazon Lightsail','AWS Elastic Beanstalk','AWS Batch','AWS IQ'], a:2, exp:'AWS Batch coordinates extensive background batch schedules across variable server configurations.' }
+];
+
+const quizContainer = document.getElementById('quizContainer');
+quizQuestions.forEach((q, i) => {
+  const div = document.createElement('div');
+  div.className = 'quiz-q';
+  div.innerHTML = `
+    <div class="q-num">Question ${i+1} of 20</div>
+    <div class="q-text">${q.q}</div>
+    ${q.opts.map((o, j) => `<label><input type="radio" name="q${i}" value="${j}"> ${o}</label>`).join('')}
+    <div class="explain" id="exp${i}">💡 ${q.exp}</div>
+  `;
+  quizContainer.appendChild(div);
+});
+
+document.getElementById('quizSubmit').addEventListener('click', () => {
+  let correct = 0;
+  quizQuestions.forEach((q, i) => {
+    const selected = document.querySelector(`input[name="q${i}"]:checked`);
+    const expDiv = document.getElementById(`exp${i}`);
+    expDiv.classList.add('show');
+    if (selected && parseInt(selected.value) === q.a) {
+      correct++;
+      selected.parentElement.style.color = 'var(--success)';
+      selected.parentElement.style.fontWeight = '700';
+    }
+    const labels = document.querySelectorAll(`input[name="q${i}"]`);
+    labels[q.a].parentElement.style.background = 'rgba(76,175,80,0.08)';
+    labels[q.a].parentElement.style.borderRadius = '8px';
+  });
+  const pct = Math.round((correct / 20) * 100);
+  const scoreDiv = document.getElementById('quizScore');
+  scoreDiv.style.style = 'block';
+  scoreDiv.style.display = 'block';
+  const emoji = pct >= 90 ? '🏆' : pct >= 70 ? '🎉' : pct >= 50 ? '👍' : '📚';
+  scoreDiv.innerHTML = `${emoji} Architectural Grade: <span style="color:var(--accent)">${correct}/20</span> (${pct}%)`;
+  document.getElementById('quizRetry').style.display = 'inline-block';
+  document.getElementById('quizSubmit').style.display = 'none';
+  markProgress('quiz');
+  window.scrollTo({ top: scoreDiv.offsetTop - 100, behavior: 'smooth' });
+});
+
+document.getElementById('quizRetry').addEventListener('click', () => {
+  quizQuestions.forEach((q, i) => {
+    document.getElementById(`exp${i}`).classList.remove('show');
+    const labels = document.querySelectorAll(`input[name="q${i}"]`);
+    labels.forEach(l => {
+      l.checked = false;
+      l.parentElement.style.background = '';
+      l.parentElement.style.color = '';
+      l.parentElement.style.fontWeight = '';
+    });
+  });
+  document.getElementById('quizScore').style.display = 'none';
+  document.getElementById('quizRetry').style.display = 'none';
+  document.getElementById('quizSubmit').style.display = 'inline-block';
+  window.scrollTo({ top: document.getElementById('quiz').offsetTop - 80, behavior: 'smooth' });
+});
+
+// ===== CHEAT SHEET ELEMENT CREATION =====
+const cheatData = [
+  ['⚙️','Bulk parallel jobs scheduler','AWS Batch'],
+  ['💻','Root level server OS capacity','Amazon EC2'],
+  ['🌱','Upload web code directly PaaS','AWS Elastic Beanstalk'],
+  ['💡','Predictable flat fee dev sandboxes','Amazon Lightsail'],
+  ['📍','Sub-10ms latency metro cloud hubs','AWS Local Zones'],
+  ['🏢','AWS managed framework inside your facility','AWS Outposts'],
+  ['📶','Compute layers within cellular 5G stations','AWS Wavelength'],
+  ['📦','Catalog secure Docker images safely','Amazon ECR'],
+  ['🐳','Lightweight AWS container orchestrator','Amazon ECS'],
+  ['☸️','Managed Kubernetes upstream standard','Amazon EKS'],
+  ['🚀','Startup promotional support credits','AWS Activate'],
+  ['🤝','Hire independent certified technicians','AWS IQ'],
+  ['🛠️','Outsource environment operational runbooks','AWS Managed Services'],
+  ['ℹ️','Direct help desk troubleshooting pipelines','AWS Support']
+];
+document.getElementById('cheatSheet').innerHTML = cheatData.map(([emoji, desc, svc]) => `
+  <div class="cheat-item"><span class="cs-emoji">${emoji}</span><span style="flex:1;font-size:0.88rem;">${desc}</span><span class="cs-arrow">→</span><span class="cs-svc">${svc}</span></div>
+`).join('');
+
+// ===== RUNTIME PROGRESS METRIC HOOKS =====
+const progressSections = {};
+function markProgress(section) {
+  progressSections[section] = true;
+  const total = ['tree','cards','concepts','compare','memory','scenarios','quiz'];
+  const done = total.filter(s => progressSections[s]).length;
+  const pct = Math.round((done / total.length) * 100);
+  document.getElementById('progress-bar').style.width = pct + '%';
+}
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting && entry.target.id) {
+      markProgress(entry.target.id);
+    }
+  });
+}, { threshold: 0.15 });
+document.querySelectorAll('section[id]').forEach(s => observer.observe(s));
+</script>
+
+</body>
+</html>
